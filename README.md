@@ -1,10 +1,10 @@
 # Face recognition
 
-This mainly uses this [API](https://github.com/ageitgey/face_recognition) for the face detection and recognition.
+This mainly uses this [API](https://github.com/ageitgey/face_recognition) for the face detection and recognition, which is itself based on [Dlib](http://dlib.net/) with a trained model.
 
 ## Concepts
 
-Faces are saved into a model, which is used to recognize persons in photos.
+Faces are saved into a local model, used to recognize persons in photos.
 
 There are 2 scripts:
 * `model.py`: used to create, visualize or remove from the model.

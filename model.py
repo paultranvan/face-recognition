@@ -55,9 +55,11 @@ def encode_face(image):
 
     if len(encodings) > 1:
         click.echo("WARNING: More than one face found in {}. Only considering the first face.".format(file))
+        return "", None
 
     if len(encodings) == 0:
         click.echo("WARNING: No faces found in {}. Ignoring file.".format(file))
+        return "", None
     else:
         return basename, encodings[0]
 
@@ -71,7 +73,7 @@ def cli():
 @click.option('--model', default=MODEL_FILE, help='Specify a model (default is ' + MODEL_FILE + ')')
 def show(model):
     """Display the face names saved in model"""
-    model = model if model != "" else MODE_FILE
+    model = model if model != "" else MODEL_FILE
     show_model(model)
 
 
@@ -81,7 +83,7 @@ def show(model):
 def remove(model, face_to_remove):
     """Remove the given face name from the model"""
 
-    model = model if model != "" else MODE_FILE
+    model = model if model != "" else MODEL_FILE
     remove_from_model(face_to_remove, model)
     show_model(model)
 
@@ -91,10 +93,13 @@ def remove(model, face_to_remove):
 def add(model, image_path):
     """Add to the model the face found in the given image"""
 
-    model = model if model != "" else MODE_FILE
+    model = model if model != "" else MODEL_FILE
     name, encoded_img = encode_face(image_path)
-    save_to_model(name, encoded_img, model)
-    show_model(model)
+    if name != "":
+        save_to_model(name, encoded_img, model)
+        show_model(model)
+    else:
+        click.echo('Error')
 
 if __name__ == "__main__":
     cli()

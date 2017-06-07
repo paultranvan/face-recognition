@@ -7,6 +7,7 @@ import re
 import click
 import os
 import pickle
+import math
 
 MODEL_FILE = "model.pkl"
 
@@ -57,11 +58,12 @@ def scan_known_people(folder):
 
 
 # Draw a green rectangle for each spotted face
-def drawRectangleAroundFaces(image, image_path, face_locations, face_names):
+def drawRectangleAroundFaces(image, image_path, face_locations, face_names, distances):
     # Let's trace out each facial feature in the image with a line!
     pil_image = Image.fromarray(image)
     d = ImageDraw.Draw(pil_image)
 
+    cpt = 0
     for face_location, face_name in zip(face_locations, face_names):
 
         top, right, bottom, left = face_location
@@ -74,11 +76,24 @@ def drawRectangleAroundFaces(image, image_path, face_locations, face_names):
         d.line([(right, bottom), (left, bottom)], fill=(0, 204, 0), width=5)
         d.line([(left, bottom), (left, top)], fill=(0, 204, 0), width=5)
 
-        xText = (right + left) / 2
-        yText = bottom + 35
+        # Print the face name
+        #xText = int((right + left) / 2)
+        xText = left
+        yText = bottom
         fontsize = computeFontSize(image_path, face_name)
         font = ImageFont.truetype("arial.ttf", fontsize)
         d.text([xText, yText], text=face_name, fill=(0,204,0), font=font)
+
+        # Print the distance
+        xText = left
+        yText = top - 40
+        fontsize = int(fontsize / 4)
+        font = ImageFont.truetype("arial.ttf", fontsize)
+        distTxt = str(float("{0:.2f}".format(distances[cpt])))
+        d.text([xText, yText], text=distTxt, fill=(0,204,0), font=font)
+
+        cpt+=1
+
 
     pil_image.show()
     pil_image.save("new.jpg")
@@ -110,23 +125,27 @@ def main(image_path):
 
     # Compare model faces with all the detected faces in the image
     face_names = []
+    distances = []
     for face_encoding in face_encodings:
-        results = face_recognition.compare_faces(model_encoded_images, face_encoding, 0.55)
+        results, dist = face_recognition.compare_faces(model_encoded_images, face_encoding, 0.55)
         faceFound = False
         for i, res in enumerate(results):
             if res:
                 print("%s match this photo!" % model_face_names[i])
+                print("with distance " % dist[i])
                 face_names.append(model_face_names[i])
+                distances.append(dist[i])
                 faceFound = True
                 break
         if not faceFound:
-            face_names.append("Unknown")
+            print("not known")
+            # face_names.append("Unknown")
 
 
     #print("I found {} face(s) in this photograph.".format(len(face_locations)))
 
     # Draw faces rectangle on image
-    drawRectangleAroundFaces(input_image, image_path, face_locations, face_names)
+    drawRectangleAroundFaces(input_image, image_path, face_locations, face_names, distances)
 
 if __name__ == "__main__":
     main()

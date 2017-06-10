@@ -85,11 +85,13 @@ def drawRectangleAroundFaces(image, image_path, face_locations, face_names):
 
 @click.command()
 @click.argument('image_path')
-def main(image_path):
+@click.option('--model', default='model.pkl', help='Face model to use')
+def main(image_path, model):
+
     # Extract known faces from model
     model_encoded_images = []
     model_face_names = []
-    with open(MODEL_FILE, 'rb') as input:
+    with open(model, 'rb') as input:
         encodedFaces = pickle.load(input)
         print("faces found in model : %s " % encodedFaces.keys())
 
@@ -111,7 +113,7 @@ def main(image_path):
     # Compare model faces with all the detected faces in the image
     face_names = []
     for face_encoding in face_encodings:
-        results = face_recognition.compare_faces(model_encoded_images, face_encoding, 0.55)
+        results = face_recognition.compare_faces(model_encoded_images, face_encoding, 0.6)
         faceFound = False
         for i, res in enumerate(results):
             if res:
@@ -121,7 +123,7 @@ def main(image_path):
                 break
         if not faceFound:
             face_names.append("Unknown")
-
+            print("unknown face :/ ")
 
     #print("I found {} face(s) in this photograph.".format(len(face_locations)))
 

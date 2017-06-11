@@ -85,7 +85,7 @@ def drawRectangleAroundFaces(image, image_path, face_locations, face_names):
 
 @click.command()
 @click.argument('image_path')
-@click.option('--model', default='model.pkl', help='Face model to use')
+@click.option('--model', default=MODEL_FILE, help='Face model to use')
 def main(image_path, model):
 
     # Extract known faces from model

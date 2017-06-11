@@ -28,22 +28,25 @@ def remove_from_model(name, filename):
             print("Face %s removed from model %s " % (name, MODEL_FILE))
 
 
-def save_to_model(name, encoded_img, filename):
-    if os.path.isfile(filename) :
-        print("append model with %s" % name)
-        with open(filename, 'rb') as input:
+def save_to_model(name, encoded_img, model_filename):
+    if os.path.isfile(model_filename) :
+        with open(model_filename, 'rb') as input:
             encodedFaces = pickle.load(input)
+
+        if name in encodedFaces:
+            print("WARNING: " + name + " already exists in this model")
+            return
 
         encodedFaces[name] = encoded_img
 
-        with open(filename, 'wb') as output:
+        with open(model_filename, 'wb') as output:
             pickle.dump(encodedFaces, output, pickle.HIGHEST_PROTOCOL)
-            print("Face %s saved to model %s " % (name, MODEL_FILE))
+            print("Face %s saved to %s " % (name, MODEL_FILE))
 
 
     else:
         print("Create model with %s" % name)
-        with open(filename, 'wb') as output:
+        with open(model_filename, 'wb') as output:
             encodedFaces = {name: encoded_img}
             pickle.dump(encodedFaces, output, pickle.HIGHEST_PROTOCOL)
 
@@ -63,6 +66,24 @@ def encode_face(image):
     else:
         return basename, encodings[0]
 
+
+def list_images(path):
+    # List only the files in the directory
+    images = list()
+    for dir_, _, files in os.walk(path):
+        for fileName in files:
+            relDir = os.path.relpath(dir_, '.')
+            relFile = os.path.join(relDir, fileName)
+            images.append(relFile)
+    return images
+
+
+def add_face(image_path, model):
+    name, encoded_img = encode_face(image_path)
+    if name != "":
+        save_to_model(name, encoded_img, model)
+    else:
+        print("Error with %s" % image_path)
 
 
 @click.group()
@@ -89,17 +110,22 @@ def remove(model, face_to_remove):
 
 @cli.command('add')
 @click.option('--model', default=MODEL_FILE, help='Specify a model (default is ' + MODEL_FILE + ')')
+@click.option('--directory', default=False, help='Add all the faces in the directory', type=bool)
 @click.argument('image_path')
-def add(model, image_path):
+def add(model, directory, image_path):
     """Add to the model the face found in the given image"""
 
     model = model if model != "" else MODEL_FILE
-    name, encoded_img = encode_face(image_path)
-    if name != "":
-        save_to_model(name, encoded_img, model)
-        show_model(model)
+
+    if directory:
+        images = list_images(image_path)
+        print("files in directory : {} ".format(images))
+        for img in images:
+            print("image : %s" % img)
+            add_face(img, model)
+
     else:
-        click.echo('Error')
+        add_face(image_path, model)
 
 if __name__ == "__main__":
     cli()

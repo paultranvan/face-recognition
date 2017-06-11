@@ -81,7 +81,13 @@ def drawRectangleAroundFaces(image, image_path, face_locations, face_names):
         d.text([xText, yText], text=face_name, fill=(0,204,0), font=font)
 
     pil_image.show()
-    pil_image.save("new.jpg")
+
+    # Save file
+    baseName = os.path.splitext(image_path)[0]
+    extension = os.path.splitext(image_path)[1]
+    newFile = baseName + "_reco" + extension
+    print("Save file to : %s" % newFile)
+    pil_image.save(newFile)
 
 @click.command()
 @click.argument('image_path')

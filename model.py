@@ -13,9 +13,9 @@ MODEL_FILE = "model.pkl"
 
 
 def show_model(model):
-    with open(MODEL_FILE, 'rb') as input:
+    with open(model, 'rb') as input:
         encodedFaces = pickle.load(input)
-        print("faces in model : {} ".format(encodedFaces.keys()))
+        print("faces in model {}: {} ".format(model, encodedFaces.keys()))
 
 
 def remove_from_model(name, filename):

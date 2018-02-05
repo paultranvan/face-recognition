@@ -43,7 +43,6 @@ def save_to_model(name, encoded_img, model_filename):
             pickle.dump(encodedFaces, output, pickle.HIGHEST_PROTOCOL)
             print("Face %s saved to %s " % (name, MODEL_FILE))
 
-
     else:
         print("Create model with %s" % name)
         with open(model_filename, 'wb') as output:

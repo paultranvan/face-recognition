@@ -7,8 +7,10 @@ This mainly uses this [API](https://github.com/ageitgey/face_recognition) for th
 Faces are saved into a local model, used to recognize persons in photos.
 
 There are 2 scripts:
-* `model.py`: used to create, visualize or remove from the model.
-* `photo_face_reco.py`: used to detect and recognize faces in a given photo, thanks to the built model.
+* `model.py`: used to create, visualize, add or remove the model.
+* `photo_face_reco.py`: used to detect and recognize faces in a given photo.
+* `video_face_reco.py`: used to detect and recognize faces on the webcam.
+* `video_face_reco_rpi.py`: same than `video_face_reco.py`, but for raspberry pi.
 
 ## Usage
 

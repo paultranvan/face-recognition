@@ -36,15 +36,15 @@ def scan_known_people(folder):
 
 
 # Draw a green rectangle for each spotted face
-def drawRectangleAroundFaces(image, image_path, face_locations, face_names):
+def drawRectangleAroundFaces(image, image_path, face_locations, face_names, distances):
     # Let's trace out each facial feature in the image with a line!
     pil_image = Image.fromarray(image)
     d = ImageDraw.Draw(pil_image)
 
-    for face_location, face_name in zip(face_locations, face_names):
+    for face_location, face_name, distance in zip(face_locations, face_names, distances):
 
         top, right, bottom, left = face_location
-        print("A face is located at pixel location Top: {}, Left: {}, Bottom: {}, Right: {}".format(top, left, bottom, right))
+        #print("A face is located at pixel location Top: {}, Left: {}, Bottom: {}, Right: {}".format(top, left, bottom, right))
 
         # Be careful with coordinates orders, eg left for x, top for y
         # A simpler rectangle method exist, but the width cannot be specified...
@@ -71,8 +71,8 @@ def drawRectangleAroundFaces(image, image_path, face_locations, face_names):
 @click.command()
 @click.argument('image_path')
 @click.option('--model', default=MODEL_FILE, help='Face model to use')
-@click.option('--distance', default=0.55, help='Minimal distance to match a face. The lower the stricter')
-def main(image_path, model, distance):
+@click.option('--tolerance', default=0.53, help='Minimal distance to match a face. The lower the stricter')
+def main(image_path, model, tolerance):
 
     # Extract known faces from model
     model_encoded_images = []
@@ -98,23 +98,37 @@ def main(image_path, model, distance):
 
     # Compare model faces with all the detected faces in the image
     face_names = []
+    face_distances = []
     for face_encoding in face_encodings:
-        results = face_recognition.compare_faces(model_encoded_images, face_encoding, distance)
-        faceFound = False
-        for i, res in enumerate(results):
-            if res:
-                print("%s spotted!" % model_face_names[i])
-                face_names.append(model_face_names[i])
-                faceFound = True
-                break
-        if not faceFound:
-            face_names.append("Unknown")
+        #results = face_recognition.compare_faces(model_encoded_images, face_encoding, tolerance)
+
+        # Compute the distances between the face and all the model's faces
+        distances = face_recognition.face_distance(model_encoded_images, face_encoding)
+
+        # Keep the distances below the tolerance threshold
+        faces = []
+        for i, dist in enumerate(distances):
+            if dist <= tolerance:
+                faces.append((model_face_names[i], dist))
+
+        # One face has matched: keep it
+        if len(faces) is 1:
+            face_names.append(faces[0][0])
+            face_distances.append(faces[0][1])
+            print("%s spotted!" % faces[0][0])
+        # Several faces have matched
+        elif len(faces) > 1:
+            print("more than one face match this one")
+        # None face has matched
+        else:
+            face_names.append("")
+            face_distances.append(-1)
             print("unknown face :/ ")
 
     #print("I found {} face(s) in this photograph.".format(len(face_locations)))
 
     # Draw faces rectangle on image
-    drawRectangleAroundFaces(input_image, image_path, face_locations, face_names)
+    drawRectangleAroundFaces(input_image, image_path, face_locations, face_names, face_distances)
 
 if __name__ == "__main__":
     main()

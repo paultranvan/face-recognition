@@ -7,7 +7,7 @@ import re
 import os
 import pickle
 
-MODEL_FILE = "model.pkl"
+MODEL_FILE = "models/model.pkl"
 
 def image_files_in_folder(folder):
     return [os.path.join(folder, f) for f in os.listdir(folder) if re.match(r'.*\.(jpg|jpeg|png)', f, flags=re.I)]

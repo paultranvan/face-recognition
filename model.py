@@ -9,7 +9,7 @@ import warnings
 import pickle
 import face_recognition.api as face_recognition
 
-MODEL_FILE = "model.pkl"
+MODEL_FILE = "models/model.pkl"
 
 
 def show_model(model):

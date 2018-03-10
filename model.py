@@ -41,7 +41,7 @@ def save_to_model(name, encoded_img, model_filename):
 
         with open(model_filename, 'wb') as output:
             pickle.dump(encodedFaces, output, pickle.HIGHEST_PROTOCOL)
-            print("Face %s saved to %s " % (name, MODEL_FILE))
+            print("Face %s saved to %s " % (name, model_filename))
 
     else:
         print("Create model with %s" % name)
@@ -112,7 +112,7 @@ def remove(model, face_to_remove):
 @click.option('--directory', default=False, help='Add all the faces in the directory', type=bool)
 @click.argument('image_path')
 def add(model, directory, image_path):
-    """Add to the model the face found in the given image"""
+    """Add to the model the face found in the given image. Create the model if it does not exist"""
 
     model = model if model != "" else MODEL_FILE
 

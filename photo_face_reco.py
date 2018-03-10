@@ -36,7 +36,7 @@ def scan_known_people(folder):
 
 
 # Draw a green rectangle for each spotted face
-def drawRectangleAroundFaces(image, image_path, face_locations, face_names, distances):
+def drawRectangleAroundFaces(image, image_path, output_path, face_locations, face_names, distances, show_distance):
     # Let's trace out each facial feature in the image with a line!
     pil_image = Image.fromarray(image)
     d = ImageDraw.Draw(pil_image)
@@ -53,27 +53,40 @@ def drawRectangleAroundFaces(image, image_path, face_locations, face_names, dist
         d.line([(right, bottom), (left, bottom)], fill=(0, 204, 0), width=5)
         d.line([(left, bottom), (left, top)], fill=(0, 204, 0), width=5)
 
-        xText = (right + left) / 2
-        yText = bottom + 15
+        xTextName = (right + left) / 2
+        yTextName = bottom + 15
         fontsize = 100
         font = ImageFont.truetype("arialbd.ttf", fontsize)
-        d.text([xText, yText], text=face_name, fill=(0,180,0), font=font)
+        d.text([xTextName, yTextName], text=face_name, fill=(0,180,0), font=font)
 
-    pil_image.show()
+        if show_distance:
+            xTextDist = xTextName
+            yTextName = yTextName + fontsize + 10
+            font = ImageFont.truetype("arialbd.ttf", fontsize / 2)
+            d.text([xTextName, yTextName], text=str("%.2f" % distance), fill=(0,180,0), font=font)
+
+
+    # pil_image.show()
 
     # Save file
     baseName = os.path.splitext(os.path.basename(image_path))[0]
     extension = os.path.splitext(image_path)[1]
-    newFile = baseName + "_reco" + extension
-    print("Save file to : %s" % newFile)
-    pil_image.save(newFile)
+    newRecoFile = baseName + "_reco" + extension
+    newRecoFile = os.path.join(output_path, newRecoFile)
+    print("Save file to : %s" % newRecoFile)
+    pil_image.save(newRecoFile)
 
-@click.command()
-@click.argument('image_path')
-@click.option('--model', default=MODEL_FILE, help='Face model to use')
-@click.option('--tolerance', default=0.53, help='Minimal distance to match a face. The lower the stricter')
-def main(image_path, model, tolerance):
+    # TODO: THIS IS ONLY FOR DEMO
+    metadataFile = baseName + ".names"
+    metadataFile = os.path.join(output_path, metadataFile)
+    file = open(metadataFile,"w")
+    for name in face_names:
+        file.write(name)
+    file.close()
+    print("Save metadata to : %s" % metadataFile)
 
+
+def recognize(image_path, model, tolerance, output_path, show_distance):
     # Extract known faces from model
     model_encoded_images = []
     model_face_names = []
@@ -100,35 +113,59 @@ def main(image_path, model, tolerance):
     face_names = []
     face_distances = []
     for face_encoding in face_encodings:
-        #results = face_recognition.compare_faces(model_encoded_images, face_encoding, tolerance)
 
         # Compute the distances between the face and all the model's faces
         distances = face_recognition.face_distance(model_encoded_images, face_encoding)
 
         # Keep the distances below the tolerance threshold
-        faces = []
+        names = []
+        dists = []
         for i, dist in enumerate(distances):
             if dist <= tolerance:
-                faces.append((model_face_names[i], dist))
+                names.append(model_face_names[i])
+                dists.append(dist)
 
         # One face has matched: keep it
-        if len(faces) is 1:
-            face_names.append(faces[0][0])
-            face_distances.append(faces[0][1])
-            print("%s spotted!" % faces[0][0])
-        # Several faces have matched
-        elif len(faces) > 1:
+        if len(names) is 1:
+            face_names.append(names[0])
+            face_distances.append(dists[0])
+            print("%s spotted!" % names[0])
+        # Several faces have matched: keep the closest
+        elif len(names) > 1:
             print("more than one face match this one")
+            print("distances : %s" % dists)
+            idx = dists.index(min(dists))
+            face_names.append(names[idx] + " ?")
+            face_distances.append(dists[idx])
+
         # None face has matched
         else:
             face_names.append("")
             face_distances.append(-1)
             print("unknown face :/ ")
 
-    #print("I found {} face(s) in this photograph.".format(len(face_locations)))
-
     # Draw faces rectangle on image
-    drawRectangleAroundFaces(input_image, image_path, face_locations, face_names, face_distances)
+    drawRectangleAroundFaces(
+        input_image,
+        image_path,
+        output_path,
+        face_locations,
+        face_names,
+        face_distances,
+        show_distance)
+
+
+
+@click.command()
+@click.argument('image_path')
+@click.option('--model', default=MODEL_FILE, help='Face model to use')
+@click.option('--tolerance', default=0.53, help='Minimal distance to match a face. The lower the stricter')
+@click.option('--output_path', default='.', help='Path to save the recognized files')
+@click.option('--show-distance', default=False, help='Display the distance for each recognized face')
+def main(image_path, model, tolerance, output_path, show_distance):
+    # Separate in another function to allowed the call from other script
+    recognize(image_path, model, tolerance, output_path, show_distance)
+
 
 if __name__ == "__main__":
     main()

@@ -8,7 +8,7 @@ COZY_URL = config.url
 SAVE_DIR = config.save_dir
 RUN_INTERVAL = config.run_interval
 
-setInterval(function() {
+setInterval(function run() {
     console.log("Let's check contacts");
 
     logIn(function(err) {
@@ -22,19 +22,8 @@ setInterval(function() {
             })
         }
     })
-}, RUN_INTERVAL)
-
-logIn(function(err) {
-    if (err) {
-        console.error(err)
-    } else {
-        getContacts(function(err) {
-            if(err) {
-                console.error(err)
-            }
-        })
-    }
-})
+    return run
+}(), RUN_INTERVAL)
 
 function logIn(callback) {
     options = {

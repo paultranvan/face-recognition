@@ -5,13 +5,13 @@ import face_recognition
 import warnings
 import re
 import os
+import sys
 import pickle
 
 MODEL_FILE = "models/model.pkl"
 
 def image_files_in_folder(folder):
     return [os.path.join(folder, f) for f in os.listdir(folder) if re.match(r'.*\.(jpg|jpeg|png)', f, flags=re.I)]
-
 
 # Scan the faces directory to extract the names and faces encodings
 def scan_known_people(folder):
@@ -81,7 +81,8 @@ def drawRectangleAroundFaces(image, image_path, output_path, face_locations, fac
     metadataFile = os.path.join(output_path, metadataFile)
     file = open(metadataFile,"w")
     for name in face_names:
-        file.write(name)
+        if name is not "":
+            file.write(name + '\n')
     file.close()
     print("Save metadata to : %s" % metadataFile)
 
@@ -109,50 +110,52 @@ def recognize(image_path, model, tolerance, output_path, show_distance):
 
     print("{} face(s) found in this photograph.".format(len(face_locations)))
 
-    # Compare model faces with all the detected faces in the image
-    face_names = []
-    face_distances = []
-    for face_encoding in face_encodings:
+    if len(face_locations) > 0:
 
-        # Compute the distances between the face and all the model's faces
-        distances = face_recognition.face_distance(model_encoded_images, face_encoding)
+        # Compare model faces with all the detected faces in the image
+        face_names = []
+        face_distances = []
+        for face_encoding in face_encodings:
 
-        # Keep the distances below the tolerance threshold
-        names = []
-        dists = []
-        for i, dist in enumerate(distances):
-            if dist <= tolerance:
-                names.append(model_face_names[i])
-                dists.append(dist)
+            # Compute the distances between the face and all the model's faces
+            distances = face_recognition.face_distance(model_encoded_images, face_encoding)
 
-        # One face has matched: keep it
-        if len(names) is 1:
-            face_names.append(names[0])
-            face_distances.append(dists[0])
-            print("%s spotted!" % names[0])
-        # Several faces have matched: keep the closest
-        elif len(names) > 1:
-            print("more than one face match this one")
-            print("distances : %s" % dists)
-            idx = dists.index(min(dists))
-            face_names.append(names[idx] + " ?")
-            face_distances.append(dists[idx])
+            # Keep the distances below the tolerance threshold
+            names = []
+            dists = []
+            for i, dist in enumerate(distances):
+                if dist <= tolerance:
+                    names.append(model_face_names[i])
+                    dists.append(dist)
 
-        # None face has matched
-        else:
-            face_names.append("")
-            face_distances.append(-1)
-            print("unknown face :/ ")
+            # One face has matched: keep it
+            if len(names) is 1:
+                face_names.append(names[0])
+                face_distances.append(dists[0])
+                print("%s spotted!" % names[0])
+            # Several faces have matched: keep the closest
+            elif len(names) > 1:
+                print("more than one face match this one")
+                print("distances : %s" % dists)
+                idx = dists.index(min(dists))
+                face_names.append(names[idx] + " ?")
+                face_distances.append(dists[idx])
 
-    # Draw faces rectangle on image
-    drawRectangleAroundFaces(
-        input_image,
-        image_path,
-        output_path,
-        face_locations,
-        face_names,
-        face_distances,
-        show_distance)
+            # None face has matched
+            else:
+                face_names.append("")
+                face_distances.append(-1)
+                print("unknown face :/ ")
+
+        # Draw faces rectangle on image
+        drawRectangleAroundFaces(
+            input_image,
+            image_path,
+            output_path,
+            face_locations,
+            face_names,
+            face_distances,
+            show_distance)
 
 
 

@@ -7,11 +7,25 @@ import re
 import os
 import sys
 import pickle
+import codecs
+import sys
+import json
+
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 MODEL_FILE = "models/model.pkl"
 
 def image_files_in_folder(folder):
     return [os.path.join(folder, f) for f in os.listdir(folder) if re.match(r'.*\.(jpg|jpeg|png)', f, flags=re.I)]
+
+def replace_non_ascii_characters(str):
+    str = str.replace('ç', 'c')
+    str = str.replace('é', 'e')
+    str = str.replace('è', 'e')
+    str = str.replace('à', 'a')
+    str = str.replace('ù', 'u')
+    return str
 
 # Scan the faces directory to extract the names and faces encodings
 def scan_known_people(folder):
@@ -69,21 +83,43 @@ def drawRectangleAroundFaces(image, image_path, output_path, face_locations, fac
     # pil_image.show()
 
     # Save file
+
+
     baseName = os.path.splitext(os.path.basename(image_path))[0]
     extension = os.path.splitext(image_path)[1]
     newRecoFile = baseName + "_reco" + extension
+    # this might be only useful for demo: only the reco file is relevant outside demo, so no dedicated dir is needed
+    output_path = os.path.join(output_path, baseName)
+
     newRecoFile = os.path.join(output_path, newRecoFile)
     print("Save file to : %s" % newRecoFile)
     pil_image.save(newRecoFile)
 
     # TODO: THIS IS ONLY FOR DEMO
-    metadataFile = baseName + ".names"
+    metadataFile = baseName + ".json"
     metadataFile = os.path.join(output_path, metadataFile)
-    file = open(metadataFile,"w")
-    for name in face_names:
-        if name is not "":
-            file.write(name + '\n')
-    file.close()
+
+    for i, name in enumerate(face_names):
+        name = replace_non_ascii_characters(name)
+        if " ?" in name:
+            face_names[i] = name.replace(" ?", "")
+
+    data = {
+        "class": "acl",
+        "doc": newRecoFile,
+        "subjects": face_names
+    }
+
+    with open(metadataFile, 'w') as outfile:
+        json.dump(data, outfile)
+
+    # file = codecs.open(metadataFile,"w", encoding="utf-8")
+    # for name in face_names:
+    #     name = replace_non_ascii_characters(name)
+    #     if " ?" in name:
+    #         name = name.replace(" ?", "")
+    #     file.write(name + '\n')
+    # file.close()
     print("Save metadata to : %s" % metadataFile)
 
 
@@ -143,7 +179,7 @@ def recognize(image_path, model, tolerance, output_path, show_distance):
 
             # None face has matched
             else:
-                face_names.append("")
+                face_names.append("unknown")
                 face_distances.append(-1)
                 print("unknown face :/ ")
 

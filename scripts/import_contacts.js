@@ -84,7 +84,9 @@ function getPhoto(contact, callback) {
         jar: true,
         json: true
     }
-    fullName = contact.fn.replace(" ", "_")
+    // transform the name to make it URL-compliant
+    fullName = contact.fn.replace(" ", "-")
+    fullName = fullName.toLowerCase()
     fileName = SAVE_DIR + fullName + ".jpg"
     fs.stat(fileName, function(err, stats) {
         if(err) {

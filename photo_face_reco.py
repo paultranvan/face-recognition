@@ -106,7 +106,7 @@ def drawRectangleAroundFaces(image, image_path, output_path, face_locations, fac
 
     data = {
         "class": "acl",
-        "doc": newRecoFile,
+        "doc": os.path.basename(image_path),
         "subjects": face_names
     }
 

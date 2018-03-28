@@ -17,9 +17,11 @@ from photo_face_reco import recognize
 OUTPUT_PATH = 'reco/'
 
 class Params(object):
-    def __init__(self, model, cozy_instance):
+    def __init__(self, model, cozy_instance, remote_server):
         Params.model = model
         Params.instance = cozy_instance
+        Params.remote_server = remote_server
+
 
 class Handler(PatternMatchingEventHandler):
     patterns=["*.jpg", "*.jpeg", "*.png"]
@@ -50,11 +52,9 @@ class Handler(PatternMatchingEventHandler):
         # Copy the photo to be later uploaded
         copyfile(event.src_path, photo_copy_path)
         # Run the photo recognition
-        recognize(photo_copy_path, Params.model, 0.53, out_dir, True)
+        recognize(photo_copy_path, Params.model, 0.53, OUTPUT_PATH, True)
         # Upload the photos and share the original ones with the reco persons
-        upload_and_share(photo_name, out_dir, Params.instance)
-
-
+        upload_and_share(photo_name, out_dir, Params.instance, Params.remote_server)
 
 
 
@@ -62,9 +62,10 @@ class Handler(PatternMatchingEventHandler):
 @click.argument('photos_path')
 @click.argument('model')
 @click.option('--instance', default='cozy1.local:8080', help='Cozy instance')
-def main(photos_path, model, instance):
+@click.option('--remote_server', default='', help='Remote server <user>@<server_host>')
+def main(photos_path, model, instance, remote_server):
 
-    Params(model, instance)
+    Params(model, instance, remote_server)
     observer = Observer()
     observer.schedule(Handler(), path=photos_path)
     observer.start()

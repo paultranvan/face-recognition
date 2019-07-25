@@ -22,7 +22,7 @@ face_locations = []
 face_encodings = []
 face_names = []
 
-MODEL_FILE = "model.pkl"
+MODEL_FILE = "models/model.pkl"
 
 @click.command()
 @click.option('--model', default=MODEL_FILE, help='Face model to use')
@@ -32,10 +32,10 @@ def main(model):
     model_face_names = []
     print("open model %s" % model   )
     with open(model, 'rb') as input:
-        encodedFaces = pickle.load(input)
+        encodedFaces = pickle.load(input, encoding='latin1')
         print("faces found in model : %s " % encodedFaces.keys())
 
-        for k, v in encodedFaces.iteritems():
+        for k, v in encodedFaces.items():
             model_face_names.append(k)
             model_encoded_images.append(v)
 
@@ -62,7 +62,7 @@ def main(model):
                 faceFound = False
                 for i, res in enumerate(matches):
                     if res:
-                        print("%s match!" % model_face_names[i])
+                        #print("%s match!" % model_face_names[i])
                         face_names.append(model_face_names[i])
                         faceFound = True
                         break
@@ -84,7 +84,7 @@ def main(model):
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
 
             # Draw a label with a name below the face
-            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.cv.CV_FILLED)
+            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
             font = cv2.FONT_HERSHEY_DUPLEX
             cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 

@@ -11,9 +11,6 @@ import codecs
 import sys
 import json
 
-reload(sys)
-sys.setdefaultencoding('utf8')
-
 MODEL_FILE = "models/model.pkl"
 
 def image_files_in_folder(folder):
@@ -89,7 +86,7 @@ def drawRectangleAroundFaces(image, image_path, output_path, face_locations, fac
     extension = os.path.splitext(image_path)[1]
     newRecoFile = baseName + "_reco" + extension
     # this might be only useful for demo: only the reco file is relevant outside demo, so no dedicated dir is needed
-    output_path = os.path.join(output_path, baseName)
+    #output_path = os.path.join(output_path, baseName)
 
     newRecoFile = os.path.join(output_path, newRecoFile)
     print("Save file to : %s" % newRecoFile)
@@ -128,10 +125,10 @@ def recognize(image_path, model, tolerance, output_path, show_distance):
     model_encoded_images = []
     model_face_names = []
     with open(model, 'rb') as input:
-        encodedFaces = pickle.load(input)
+        encodedFaces = pickle.load(input, encoding='latin1')
         print("faces found in model : %s " % encodedFaces.keys())
 
-        for k, v in encodedFaces.iteritems():
+        for k, v in encodedFaces.items():
             model_face_names.append(k)
             model_encoded_images.append(v)
 
